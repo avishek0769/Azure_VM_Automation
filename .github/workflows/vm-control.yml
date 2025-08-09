@@ -1,0 +1,25 @@
+name: Azure VM Start/Stop
+
+on:
+  schedule:
+    # Start VM at 8:00 AM IST (2:30 UTC)
+    - cron: '30 2 * * *'
+    # Stop VM at 11:00 PM IST (17:30 UTC)
+    - cron: '30 17 * * *'
+
+jobs:
+  control-vm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Start VM in Morning
+        if: ${{ github.event.schedule == '30 2 * * *' }}
+        run: az vm start --resource-group Videocall-VM_group --name Videocall-VM
+
+      - name: Stop VM at Night
+        if: ${{ github.event.schedule == '30 17 * * *' }}
+        run: az vm deallocate --resource-group Videocall-VM_group --name Videocall-VM
