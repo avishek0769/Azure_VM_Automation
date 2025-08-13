@@ -8,7 +8,8 @@ on:
     - cron: '30 19 * * *'
 
 jobs:
-  control-vm:
+  start-vm:
+    if: github.event.schedule == '30 1 * * *'
     runs-on: ubuntu-latest
     steps:
       - name: Azure Login
@@ -16,10 +17,23 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Start VM in Morning
-        if: ${{ github.event.schedule == '30 2 * * *' }}
-        run: az vm start --resource-group Videocall-VM_group --name Videocall-VM
+      - name: Start VM
+        run: |
+          echo "Starting VM..."
+          az vm start --resource-group Videocall-VM_group --name Videocall-VM
+          az vm show --resource-group Videocall-VM_group --name Videocall-VM --query "powerState" -o tsv
 
-      - name: Stop VM at Night
-        if: ${{ github.event.schedule == '30 17 * * *' }}
-        run: az vm deallocate --resource-group Videocall-VM_group --name Videocall-VM
+  stop-vm:
+    if: github.event.schedule == '30 19 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Stop VM
+        run: |
+          echo "Stopping VM..."
+          az vm deallocate --resource-group Videocall-VM_group --name Videocall-VM
+          az vm show --resource-group Videocall-VM_group --name Videocall-VM --query "powerState" -o tsv
